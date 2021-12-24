@@ -1,0 +1,55 @@
+function y_fired = multi_phase_conv_par(y, h, D)
+    % par
+    j = 10;
+    % move array y, h to gpu
+    y = gpuArray(y); h = gpuArray(h);
+    % do multi-phase convolution
+    N = length(y); L = length(h);
+    y_fired = zeros(1, N+L+D-2, 'gpuArray');
+    % parelle compute
+    par_compute_once(1, D, y, h, y_fired);
+    par_compute_once(2, D, y, h, y_fired);
+    par_compute_once(3, D, y, h, y_fired);
+    par_compute_once(4, D, y, h, y_fired);
+    par_compute_once(5, D, y, h, y_fired);
+    par_compute_once(6, D, y, h, y_fired);
+    par_compute_once(7, D, y, h, y_fired);
+    par_compute_once(8, D, y, h, y_fired);
+    par_compute_once(9, D, y, h, y_fired);
+    par_compute_once(10, D, y, h, y_fired);
+    par_compute_once(11, D, y, h, y_fired);
+    par_compute_once(12, D, y, h, y_fired);
+    par_compute_once(13, D, y, h, y_fired);
+    par_compute_once(14, D, y, h, y_fired);
+    par_compute_once(15, D, y, h, y_fired);
+    par_compute_once(16, D, y, h, y_fired);
+    par_compute_once(17, D, y, h, y_fired);
+    par_compute_once(18, D, y, h, y_fired);
+    par_compute_once(19, D, y, h, y_fired);
+    par_compute_once(20, D, y, h, y_fired);
+    par_compute_once(21, D, y, h, y_fired);
+    par_compute_once(22, D, y, h, y_fired);
+    par_compute_once(23, D, y, h, y_fired);
+    par_compute_once(24, D, y, h, y_fired);
+    par_compute_once(25, D, y, h, y_fired);
+    par_compute_once(26, D, y, h, y_fired);
+    par_compute_once(27, D, y, h, y_fired);
+    par_compute_once(28, D, y, h, y_fired);
+    par_compute_once(29, D, y, h, y_fired);
+    par_compute_once(30, D, y, h, y_fired);
+    y_fired = y_fired(1:N+L-1);
+end
+
+function y_fired = par_compute_once(i, D, y, h, y_fired)
+    L = length(h);
+    % step1: get hi
+    ind = i:D:L; 
+    hi = zeros(1, L, 'gpuArray');
+    hi(ind-i+1) = h(ind);                    % length(hi) is always L
+    % step2: get yi(delay)
+    yi = [zeros(1, i-1), y, zeros(1, D-i)];  % length(yi) is always N+D-1
+    % step3: do convlution
+    yi_fired = conv(yi, hi);                 % length(yi_fired) = N+L-i
+    % setp3: sum up
+    y_fired = y_fired + yi_fired;
+end

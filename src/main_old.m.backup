@@ -1,0 +1,71 @@
+clc; close all; clear all;
+% pre-settings
+figpath = './fig';
+audiopath = './audio';
+I = 1; D = 30;                    % sample rate control
+Nn = 10; L = 2*Nn*max(I, D)+1;    % FIR length
+h = filter_helper(I, D, Nn);
+
+% Q1: load audio file
+start_sec = 0; length_sec = 10;
+audioname = [audiopath, '/', 'piano.mp3'];
+[y, Fs] = load_audio(audioname, start_sec, length_sec);
+sound(y, Fs);
+
+% Q2: resample
+% draw figure1
+figure(1); plot(y);
+plot_helper(1, 'Original seris', 'n', 'y_{0}(n)');
+% do resample
+[y1, Fs1] = resample_helper(y, Fs, I, D, h);
+% draw figure
+figure(2); plot(y1);
+plot_helper(2, 'Resampled series', 'n', 'y_{1}(n)');
+
+% Q3: my_resample
+% do my_downsample
+[y2, Fs2] = my_downsample(y, Fs, D);
+figure(3); plot(y2);
+plot_helper(3, 'my Downsampled series', 'n', 'y_{2}(n)');
+
+% Q4: FIR before my_resample
+y_fired = conv(y, h);
+y_fired = delay_helper(y_fired, L);  % Notice: this function delay L//2
+[y3, Fs3] = my_downsample(y_fired, Fs, D);
+figure(4); plot(y3);
+plot_helper(3, 'FIR Downsampled series', 'n', 'y_{3}(n)');
+
+%Q5: multi-phase FIR before my resample
+y_multiphase_fired = multi_phase_conv(y, h, D);
+y_multiphase_fired = delay_helper(y_multiphase_fired, L);  % Notice: this function delay L//2
+[y4, Fs4] = my_downsample(y_multiphase_fired, Fs, D);
+figure(5); plot(y4);
+plot_helper(5, 'multi-phase FIR Downsampled series', 'n', 'y_{4}(n)');
+
+
+% Q6: check time domain & frequecy domain features
+% time domain
+
+% frequecy domain
+figure(6); plot(abs(fft(y)));
+plot_helper(6, 'Original series spectrum', 'k', 'Y_{0}(k)');
+figure(7); plot(abs(fft(y1)));
+plot_helper(7, 'Resampled series spectrum', 'k', 'Y_{1}(k)');
+figure(8); plot(abs(fft(y2)));
+plot_helper(8, 'my Downsampled series spectrum', 'k', 'Y_{2}(k)');
+figure(9); plot(abs(fft(y3)));
+plot_helper(9, 'FIR Downsampled series spectrum', 'k', 'Y_{3}(k)');
+
+% Error checking
+s = sum(y1.^2);
+sigma21 = sum((y2-y1).^2);
+sigma31 = sum((y3-y1).^2);
+sigma41 = sum((y4-y1).^2);
+SNR2 = todB(s, sigma21);
+SNR3 = todB(s, sigma31);
+SNR4 = todB(s, sigma41);
+goal1 = SNR3 - SNR2;
+goal2 = abs(SNR4 - SNR3);
+fprintf('==============RESULT===============\n\n');
+fprintf('SNR3 - SNR2 = %f dB\n\n', goal1);
+fprintf("|SNR4 - SNR3| = %f dB\n\n", goal2);

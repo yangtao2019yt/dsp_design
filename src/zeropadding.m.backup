@@ -1,0 +1,15 @@
+function [x_padded, y_padded] = zeropadding(x, y)
+    % padding the shorter series to the same length with the longer one
+    % using zero
+    Lx = length(x); Ly = length(y);
+    if Lx > Ly    % when x is longer
+        D = Lx - Ly;
+        x_padded = x;
+        y_padded = [y, zeros(1, D)];
+    else          % when y is longer
+        D = Ly - Lx;
+        x_padded = [x, zeros(1, D)];
+        y_padded = y;
+    end
+end
+
